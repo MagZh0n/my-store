@@ -3,7 +3,7 @@ from .models import Product
 from rest_framework import viewsets
 from .serializers import ProductSerializer
 
-# Веб-бет функциялары
+
 def home(request):
     return render(request, 'store/home.html')
 
@@ -18,7 +18,7 @@ def product_detail(request, product_id):
 def cart(request):
     return render(request, 'store/cart.html')
 
-# DRF API viewset
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
