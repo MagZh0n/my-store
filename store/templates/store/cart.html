@@ -1,8 +1,23 @@
 {% extends 'store/base.html' %}
 
-{% block title %}Корзина - Магазин{% endblock %}
+{% block title %}Корзина{% endblock %}
 
 {% block content %}
-    <h1>Ваша корзина</h1>
-    <p>Здесь будут отображаться добавленные товары.</p>
+    <h1>Корзина</h1>
+
+    {% if cart_items %}
+        <ul>
+            {% for item in cart_items %}
+                <li>
+                    {{ item.product.name }} — Кол-во: {{ item.quantity }}
+                    <a href="{% url 'remove_from_cart' item.product.id %}">Удалить</a>
+                </li>
+                
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Ваша корзина пуста.</p>
+    {% endif %}
 {% endblock %}
+
+
