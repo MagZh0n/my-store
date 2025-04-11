@@ -1,6 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product, CartItem
-from django.http import HttpResponse
+from .models import Product
 
 def home(request):
     return render(request, 'store/home.html')
@@ -15,13 +14,16 @@ def product_detail(request, product_id):
 
 def cart(request):
     cart_items = request.session.get('cart', [])
-    products_in_cart = []
+    products_in_cart = []  
+    total_sum = 0  
 
     for item in cart_items:
         product = get_object_or_404(Product, id=item['product_id'])
-        products_in_cart.append({'product': product, 'quantity': item['quantity']})
+        item_total = product.price * item['quantity']
+        total_sum += item_total
+        products_in_cart.append({'product': product, 'quantity': item['quantity'], 'item_total': item_total})
 
-    return render(request, 'store/cart.html', {'cart_items': products_in_cart})
+    return render(request, 'store/cart.html', {'cart_items': products_in_cart, 'total_sum': total_sum})
 
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -47,7 +49,6 @@ def remove_from_cart(request, product_id):
     cart = [item for item in cart if item['product_id'] != product_id]
     request.session['cart'] = cart
     return redirect('cart')
-
 
 
 

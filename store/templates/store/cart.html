@@ -9,15 +9,16 @@
         <ul>
             {% for item in cart_items %}
                 <li>
-                    {{ item.product.name }} — Кол-во: {{ item.quantity }}
+                    {{ item.product.name }} — Кол-во: {{ item.quantity }} — Цена: {{ item.product.price }} 
+                    = {{ item.item_total }}  
                     <a href="{% url 'remove_from_cart' item.product.id %}">Удалить</a>
                 </li>
-                
             {% endfor %}
         </ul>
+
+        <h3>Общая сумма: {{ total_sum }}</h3>
+
     {% else %}
         <p>Ваша корзина пуста.</p>
     {% endif %}
 {% endblock %}
-
-
