@@ -3,7 +3,7 @@ from .views import (
     root_redirect, home, register,
     product_list, product_detail,
     cart, add_to_cart, remove_from_cart,
-    logout_view, login_view, OrderCreateAPIView
+    logout_view, login_view, OrderCreateAPIView, OrderListAPIView
 )
 
 
@@ -19,6 +19,7 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     path('login/', login_view, name='login'),
     path('api/orders/create/', OrderCreateAPIView.as_view(), name='order-create'),
+    path('api/orders/', OrderListAPIView.as_view(), name='order-list'),
 ]
 
 
