@@ -11,7 +11,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .serializers import OrderCreateSerializer, OrderSerializer  # Добавлен импорт OrderSerializer
 from rest_framework import generics
-
+from rest_framework import viewsets, permissions
+from .models import Order
+from .serializers import OrderSerializer
+from .permissions import IsOwnerOrAdmin
 
 def root_redirect(request):
     if request.user.is_authenticated:
@@ -132,3 +135,18 @@ class OrderListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+class OrderViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        # Админ видит все, остальные — только свои заказы
+        if user.is_staff:
+            return Order.objects.all()
+        return Order.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        # Автоматически устанавливаем владельца заказа
+        serializer.save(user=self.request.user)

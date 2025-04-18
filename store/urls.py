@@ -1,11 +1,14 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
     root_redirect, home, register,
     product_list, product_detail,
     cart, add_to_cart, remove_from_cart,
-    logout_view, login_view, OrderCreateAPIView, OrderListAPIView
+    logout_view, login_view, OrderCreateAPIView, OrderListAPIView, OrderViewSet
 )
 
+router = DefaultRouter()
+router.register(r'orders', OrderViewSet, basename='order')
 
 urlpatterns = [
     path('', root_redirect, name='root'),
@@ -20,6 +23,7 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('api/orders/create/', OrderCreateAPIView.as_view(), name='order-create'),
     path('api/orders/', OrderListAPIView.as_view(), name='order-list'),
+    path('', include(router.urls)),
 ]
 
 
