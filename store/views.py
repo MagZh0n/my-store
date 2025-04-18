@@ -2,12 +2,16 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Product
+from .models import Product, Order, OrderItem, CartItem  # Добавлен импорт Order
 from .forms import RegisterForm
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import authenticate, login
-from .forms import RegisterForm
-from django.contrib.auth import login
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from .serializers import OrderCreateSerializer, OrderSerializer  # Добавлен импорт OrderSerializer
+from rest_framework import generics
+
 
 def root_redirect(request):
     if request.user.is_authenticated:
@@ -111,4 +115,20 @@ def register(request):
 
     return render(request, 'store/register.html', {'form': form})
 
+class OrderCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request):
+        serializer = OrderCreateSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            order = serializer.save()
+            return Response({"message": "Заказ оформлен успешно!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class OrderListAPIView(generics.ListAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
