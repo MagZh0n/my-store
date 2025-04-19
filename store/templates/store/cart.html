@@ -9,16 +9,42 @@
         <ul>
             {% for item in cart_items %}
                 <li>
-                    {{ item.product.name }} — Кол-во: {{ item.quantity }}  
+                    {{ item.product.name }} — {{ item.quantity }} шт. — {{ item.item_total }} ₸
                     <a href="{% url 'remove_from_cart' item.product.id %}">Удалить</a>
                 </li>
             {% endfor %}
         </ul>
-
-        <h3>Общая сумма: {{ total_sum }} тг.</h3>  
+        <p>Итого: {{ total_sum }} ₸</p>
+        
+        <div id="card-element" style="margin: 20px 0; padding: 10px; border: 1px solid #ccc;"></div>
+        <button id="checkout-button" class="btn btn-primary">Оплатить Visa</button>
     {% else %}
-        <p>Ваша корзина пуста.</p>
+        <p>Корзина пуста</p>
     {% endif %}
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('{{ STRIPE_PUBLIC_KEY }}');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+
+        document.getElementById('checkout-button').addEventListener('click', async () => {
+            const { error } = await stripe.confirmCardPayment(
+                '{{ client_secret }}', {  
+                    payment_method: {
+                        card: cardElement,
+                    }
+                }
+            );
+
+            if (error) {
+                alert(error.message);
+            } else {
+                window.location.href = "{% url 'payment_success' %}";
+            }
+        });
+    </script>
 {% endblock %}
 
 

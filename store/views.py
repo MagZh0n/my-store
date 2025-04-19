@@ -2,19 +2,23 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Product, Order, OrderItem, CartItem  # Добавлен импорт Order
-from .forms import RegisterForm
+from .models import Product, Order, OrderItem, CartItem  
 from django.contrib.auth.forms import AuthenticationForm
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .serializers import OrderCreateSerializer, OrderSerializer  # Добавлен импорт OrderSerializer
+from .serializers import OrderCreateSerializer, OrderSerializer  
 from rest_framework import generics
 from rest_framework import viewsets, permissions
 from .models import Order
 from .serializers import OrderSerializer
 from .permissions import IsOwnerOrAdmin
+import stripe
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponse
+
 
 def root_redirect(request):
     if request.user.is_authenticated:
@@ -56,10 +60,21 @@ def cart(request):
             'quantity': item['quantity'],
             'item_total': item_total
         })
-    
+
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=int(total_sum * 100),
+            currency='kzt',
+        )
+        client_secret = intent.client_secret
+    except Exception as e:
+        client_secret = None
+
     return render(request, 'store/cart.html', {
         'cart_items': products_in_cart,
-        'total_sum': total_sum
+        'total_sum': total_sum,
+        'client_secret': client_secret,  
+        'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,  
     })
 
 @login_required
@@ -142,11 +157,74 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Админ видит все, остальные — только свои заказы
         if user.is_staff:
             return Order.objects.all()
         return Order.objects.filter(user=user)
 
     def perform_create(self, serializer):
-        # Автоматически устанавливаем владельца заказа
         serializer.save(user=self.request.user)
+
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def create_payment_intent(request):
+    cart_items = request.session.get('cart', [])
+    total_sum = 0
+
+    for item in cart_items:
+        product = get_object_or_404(Product, id=item['product_id'])
+        total_sum += product.price * item['quantity']
+
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=int(total_sum * 100),  
+            currency='kzt',
+            metadata={'user_id': request.user.id}
+        )
+        return JsonResponse({
+            'clientSecret': intent['client_secret']
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=403)
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return HttpResponse(status=400)
+
+    if event['type'] == 'payment_intent.succeeded':
+        payment_intent = event['data']['object']
+        user_id = payment_intent['metadata']['user_id']
+        user = User.objects.get(id=user_id)
+        
+       
+
+    return HttpResponse(status=200)
+
+
+@login_required
+def payment_success(request):
+    if 'cart' in request.session:
+        del request.session['cart']
+    
+    return render(request, 'store/payment_success.html')
+
+
+
+@csrf_exempt
+@login_required
+def clear_cart(request):
+    if 'cart' in request.session:
+        del request.session['cart']
+    return HttpResponse(status=200)

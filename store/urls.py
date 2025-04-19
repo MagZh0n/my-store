@@ -6,7 +6,7 @@ from .views import (
     cart, add_to_cart, remove_from_cart,
     logout_view, login_view, OrderCreateAPIView, OrderListAPIView, OrderViewSet
 )
-
+from . import views
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet, basename='order')
 
@@ -24,6 +24,9 @@ urlpatterns = [
     path('api/orders/create/', OrderCreateAPIView.as_view(), name='order-create'),
     path('api/orders/', OrderListAPIView.as_view(), name='order-list'),
     path('', include(router.urls)),
+    path('create-payment-intent/', views.create_payment_intent, name='create_payment_intent'),
+    path('stripe-webhook/', views.stripe_webhook, name='stripe_webhook'),
+    path('payment-success/', views.payment_success, name='payment_success'),
 ]
 
 
