@@ -18,6 +18,7 @@ import stripe
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
+from .forms import RegisterForm
 
 
 def root_redirect(request):
@@ -218,7 +219,11 @@ def payment_success(request):
     if 'cart' in request.session:
         del request.session['cart']
     
-    return render(request, 'store/payment_success.html')
+    last_order = Order.objects.filter(user=request.user).last()
+
+    return render(request, 'store/payment_success.html', {
+        'order': last_order  
+    })
 
 
 
