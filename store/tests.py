@@ -1,4 +1,5 @@
 from django.test import TestCase
+<<<<<<< HEAD
 from django.contrib.auth.models import User
 from .models import Product, Order, Cart, CartItem, OrderItem
 
@@ -45,3 +46,7 @@ class OrderItemModelTest(TestCase):
         self.assertEqual(item.quantity, 2)
         self.assertEqual(item.product.name, 'Product A')
         self.assertEqual(item.price, 30.0)
+=======
+
+# Create your tests here.
+>>>>>>> 4f2ffa29df2bc500bfeb6c0429918f23ef1ca856
