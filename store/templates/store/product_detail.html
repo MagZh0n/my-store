@@ -1,0 +1,11 @@
+{% extends 'store/base.html' %}
+
+{% block title %}{{ product.name }} - Магазин{% endblock %}
+
+{% block content %}
+    <h1>{{ product.name }}</h1>
+    <p>Цена: {{ product.price }} tg.</p>
+    <p>В наличии: {{ product.stock }} шт.</p>
+    <a href="{% url 'add_to_cart' product.id %}">Добавить в корзину</a>
+
+{% endblock %}
