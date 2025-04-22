@@ -7,6 +7,9 @@ from .views import (
     logout_view, login_view, OrderCreateAPIView, OrderListAPIView, OrderViewSet
 )
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet, basename='order')
 
@@ -27,7 +30,14 @@ urlpatterns = [
     path('create-payment-intent/', views.create_payment_intent, name='create_payment_intent'),
     path('stripe-webhook/', views.stripe_webhook, name='stripe_webhook'),
     path('payment-success/', views.payment_success, name='payment_success'),
-]
+    path('api/products/<int:pk>/', views.ProductDetailAPIView.as_view(), name='api-product-detail'),
+    path('api/cart/add/<int:product_id>/', views.AddToCartAPI.as_view(), name='api-add-to-cart'),
+    path('api/cart/', views.CartAPI.as_view(), name='api-cart'),
+    path('api/products/', views.ProductListAPIView.as_view(), name='api-product-list'),
+
+
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 

@@ -1,13 +1,13 @@
 from django.contrib import admin
-from .models import Product, Order
+from .models import Product, ProductImage
 
-@admin.register(Product)
+class ProductImageInline(admin.TabularInline):  
+    model = ProductImage
+    extra = 1  
+
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'price', 'stock')  
-    search_fields = ('name',) 
-    list_filter = ('price',) 
+    inlines = [ProductImageInline]  #
+    list_display = ('name', 'price', 'description')  
 
-@admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'created_at', 'total_price')
-    list_filter = ('created_at',)
+admin.site.register(Product, ProductAdmin)
+

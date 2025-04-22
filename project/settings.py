@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -68,16 +69,20 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  
+]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'register'
 LOGIN_REDIRECT_URL = 'home' 
-STRIPE_PUBLIC_KEY = 'your_test_public_key'
-STRIPE_SECRET_KEY = 'your_test_secret_key'
+
 
 
 STRIPE_PUBLIC_KEY = 'pk_test_51RFUMxRfBEF0CTaS1vaorGWAeNqdMhLsdqljQKcKU82Lzofc25BYGDUSaT0IBZyNmNzksn9RuoXc9qpTxedbOtye00oPD8U4q0'
 STRIPE_SECRET_KEY = 'sk_test_51RFUMxRfBEF0CTaSuhr6WLse7ZY9QBAdHMQ7y8BUsbhXkg1Et4VmmnePmEULYcCwPE5nEqWBEqbKQXbxO8bqp7rP00fS2Oi5Kl'
 STRIPE_WEBHOOK_SECRET = ''  
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
