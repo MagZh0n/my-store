@@ -199,6 +199,7 @@ def payment_success(request):
         'order': last_order
     })
 
+
 @login_required
 def decrease_quantity(request, product_id):
     cart = request.session.get('cart', [])
@@ -225,6 +226,7 @@ def increase_quantity(request, product_id):
 
     request.session['cart'] = cart
     return redirect('cart')
+
 
 @csrf_exempt
 @login_required
