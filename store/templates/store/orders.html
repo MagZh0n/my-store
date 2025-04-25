@@ -9,7 +9,7 @@
     {% for order in orders %}
       <div class="order-card">
         <h3>
-          🧾 Заказ №{{ order.id }}
+          🧾 Заказ
           <span class="order-date">{{ order.created_at|date:"d.m.Y H:i" }}</span>
         </h3>
         <p><strong>Сумма:</strong> {{ order.total_price }} ₸</p>
