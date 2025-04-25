@@ -155,7 +155,6 @@ body {
     text-decoration: underline;
 }
 
-<<<<<<< HEAD
 .section-title {
     margin-bottom: 20px;
     font-size: 26px;
@@ -207,8 +206,6 @@ body {
     font-style: italic;
 }
 
-=======
->>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 
 @media (max-width: 768px) {
     .navbar {
