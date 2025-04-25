@@ -17,7 +17,10 @@
             <a href="{% url 'home' %}">Главная</a>
             <a href="{% url 'product_list' %}">Товары</a>
             <a href="{% url 'cart' %}">Корзина</a>
+<<<<<<< HEAD
             <a href="{% url 'cart' %}">История</a>
+=======
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
             {% if user.is_authenticated %}
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}

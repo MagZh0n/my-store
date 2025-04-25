@@ -4,15 +4,22 @@ from .views import (
     root_redirect, home, register,
     product_list, product_detail,
     cart, add_to_cart, remove_from_cart,
+<<<<<<< HEAD
     logout_view, login_view,
     OrderCreateAPIView, OrderListAPIView, OrderViewSet,
     fake_payment, user_orders  
+=======
+    logout_view, login_view, OrderCreateAPIView, OrderListAPIView, OrderViewSet
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 )
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet, basename='order')
 
@@ -30,6 +37,7 @@ urlpatterns = [
     path('api/orders/create/', OrderCreateAPIView.as_view(), name='order-create'),
     path('api/orders/', OrderListAPIView.as_view(), name='order-list'),
     path('api/', include(router.urls)),
+<<<<<<< HEAD
     path('api/products/<int:pk>/', views.ProductDetailAPIView.as_view(), name='api-product-detail'),
     path('api/products/', views.ProductListAPIView.as_view(), name='api-product-list'),
     path('api/cart/add/<int:product_id>/', views.AddToCartAPI.as_view(), name='api-add-to-cart'),
@@ -40,6 +48,19 @@ urlpatterns = [
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
+=======
+    path('create-payment-intent/', views.create_payment_intent, name='create_payment_intent'),
+    path('stripe-webhook/', views.stripe_webhook, name='stripe_webhook'),
+    path('payment-success/', views.payment_success, name='payment_success'),
+    path('api/products/<int:pk>/', views.ProductDetailAPIView.as_view(), name='api-product-detail'),
+    path('api/cart/add/<int:product_id>/', views.AddToCartAPI.as_view(), name='api-add-to-cart'),
+    path('api/cart/', views.CartAPI.as_view(), name='api-cart'),
+    path('api/products/', views.ProductListAPIView.as_view(), name='api-product-list'),
+
+
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 
 
 

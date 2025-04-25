@@ -15,6 +15,7 @@
             {% endfor %}
         </ul>
         <p>Итого: {{ total_sum }} ₸</p>
+<<<<<<< HEAD
 
         <form method="post" action="{% url 'fake_payment' %}">
             {% csrf_token %}
@@ -27,3 +28,38 @@
 
 
 
+=======
+        
+        <div id="card-element" style="margin: 20px 0; padding: 10px; border: 1px solid #ccc;"></div>
+        <button id="checkout-button" class="btn btn-primary">Оплатить Visa</button>
+    {% else %}
+        <p>Корзина пуста</p>
+    {% endif %}
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('{{ STRIPE_PUBLIC_KEY }}');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+
+        document.getElementById('checkout-button').addEventListener('click', async () => {
+            const { error } = await stripe.confirmCardPayment(
+                '{{ client_secret }}', {  
+                    payment_method: {
+                        card: cardElement,
+                    }
+                }
+            );
+
+            if (error) {
+                alert(error.message);
+            } else {
+                window.location.href = "{% url 'payment_success' %}";
+            }
+        });
+    </script>
+{% endblock %}
+
+
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d

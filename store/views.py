@@ -11,13 +11,21 @@ from rest_framework import status
 from .serializers import OrderCreateSerializer, OrderSerializer, ProductSerializer
 from rest_framework import generics
 from rest_framework import viewsets, permissions
+<<<<<<< HEAD
+=======
+import stripe
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from .forms import RegisterForm
 from .permissions import IsOwnerOrAdmin
 from django.views.decorators.csrf import csrf_exempt
 
+<<<<<<< HEAD
 
+=======
+stripe.api_key = settings.STRIPE_SECRET_KEY
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 
 
 def root_redirect(request):
@@ -148,6 +156,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
+<<<<<<< HEAD
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_object_or_404
@@ -187,6 +196,52 @@ def fake_payment(request):
 
 
 
+=======
+@login_required
+def create_payment_intent(request):
+    cart_items = request.session.get('cart', [])
+    total_sum = 0
+
+    for item in cart_items:
+        product = get_object_or_404(Product, id=item['product_id'])
+        total_sum += product.price * item['quantity']
+
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=int(total_sum * 100),  
+            currency='kzt',
+            metadata={'user_id': request.user.id}
+        )
+        return JsonResponse({
+            'clientSecret': intent['client_secret']
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=403)
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return HttpResponse(status=400)
+
+    if event['type'] == 'payment_intent.succeeded':
+        payment_intent = event['data']['object']
+        user_id = payment_intent['metadata']['user_id']
+        user = User.objects.get(id=user_id)
+
+
+    return HttpResponse(status=200)
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 
 
 @login_required
@@ -203,6 +258,10 @@ def payment_success(request):
 
 @csrf_exempt
 @login_required
+<<<<<<< HEAD
+=======
+@login_required
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 def cart(request):
     cart_items = request.session.get('cart', [])
     products_in_cart = []
@@ -218,14 +277,34 @@ def cart(request):
             'item_total': item_total
         })
 
+<<<<<<< HEAD
     return render(request, 'store/cart.html', {
         'cart_items': products_in_cart,
         'total_sum': total_sum,
+=======
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=int(total_sum * 100),
+            currency='kzt',
+        )
+        client_secret = intent.client_secret
+    except Exception as e:
+        client_secret = None
+
+    return render(request, 'store/cart.html', {
+        'cart_items': products_in_cart,
+        'total_sum': total_sum,
+        'client_secret': client_secret,
+        'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
     })
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
 class ProductListAPIView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -267,9 +346,12 @@ def add_to_cart(request, product_id):
     return redirect('cart') 
 
 
+<<<<<<< HEAD
 @login_required
 def user_orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'store/orders.html', {'orders': orders})
 
 
+=======
+>>>>>>> 8d5f8d7910a12b75e7a02703ef9d53d361302d3d
