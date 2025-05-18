@@ -16,7 +16,10 @@ from django.http import JsonResponse, HttpResponse
 from .forms import RegisterForm
 from .permissions import IsOwnerOrAdmin
 from django.views.decorators.csrf import csrf_exempt
-
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from .models import Product, Cart, CartItem, Order, OrderItem
 
 
 def root_redirect(request):
@@ -27,7 +30,24 @@ def root_redirect(request):
 
 @login_required
 def home(request):
-    return render(request, 'store/home.html')
+    products = Product.objects.all().order_by('-id')[:8]
+
+    cart_items = []
+    cart_total = 0
+
+    try:
+        cart = Cart.objects.get(user=request.user)
+        cart_items = CartItem.objects.filter(cart=cart)
+        cart_total = sum(item.product.price * item.quantity for item in cart_items)
+    except Cart.DoesNotExist:
+        pass 
+
+    return render(request, 'store/home.html', {
+        'products': products,
+        'cart_items': cart_items,
+        'cart_total': cart_total
+    })
+
 
 
 @login_required
@@ -148,39 +168,37 @@ class OrderViewSet(viewsets.ModelViewSet):
 
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib import messages
-from .models import Product, Cart, CartItem, Order, OrderItem
+
 
 @login_required
 def fake_payment(request):
-    cart_data = request.session.get('cart', [])
-    if not cart_data:
+    try:
+        cart = Cart.objects.get(user=request.user)
+        cart_items = CartItem.objects.filter(cart=cart)
+    except Cart.DoesNotExist:
         messages.error(request, "Корзина пуста.")
-        return redirect('cart')
+        return redirect('home')
 
-    total_price = 0
+    if not cart_items.exists():
+        messages.error(request, "Корзина пуста.")
+        return redirect('home')
 
-    for item in cart_data:
-        product = get_object_or_404(Product, id=item['product_id'])
-        total_price += product.price * item['quantity']
+    total_price = sum(item.product.price * item.quantity for item in cart_items)
 
     order = Order.objects.create(user=request.user, total_price=total_price)
 
-    for item in cart_data:
-        product = get_object_or_404(Product, id=item['product_id'])
+    for item in cart_items:
         OrderItem.objects.create(
             order=order,
-            product=product,
-            quantity=item['quantity'],
-            price=product.price
+            product=item.product,
+            quantity=item.quantity,
+            price=item.product.price
         )
 
-    request.session['cart'] = []
-
+    cart_items.delete()  
     messages.success(request, "Оплата прошла успешно. Заказ оформлен.")
-    return redirect('orders')  
+    return redirect('orders')
+
 
 
 
@@ -202,53 +220,42 @@ def payment_success(request):
 
 @login_required
 def decrease_quantity(request, product_id):
-    cart = request.session.get('cart', [])
+    cart = get_object_or_404(Cart, user=request.user)
+    item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+    
+    if item.quantity > 1:
+        item.quantity -= 1
+        item.save()
+    else:
+        item.delete()
+    
+    return redirect('home')
 
-    for item in cart:
-        if item['product_id'] == product_id:
-            if item['quantity'] > 1:
-                item['quantity'] -= 1
-            else:
-                cart = [i for i in cart if i['product_id'] != product_id]
-            break
-
-    request.session['cart'] = cart
-    return redirect('cart')
 
 @login_required
 def increase_quantity(request, product_id):
-    cart = request.session.get('cart', [])
-
-    for item in cart:
-        if item['product_id'] == product_id:
-            item['quantity'] += 1
-            break
-
-    request.session['cart'] = cart
-    return redirect('cart')
+    cart = get_object_or_404(Cart, user=request.user)
+    item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+    item.quantity += 1
+    item.save()
+    return redirect('home')
 
 
-@csrf_exempt
 @login_required
-def cart(request):
-    cart_items = request.session.get('cart', [])
-    products_in_cart = []
-    total_sum = 0
+def decrease_quantity(request, product_id):
+    cart = get_object_or_404(Cart, user=request.user)
+    item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
 
-    for item in cart_items:
-        product = get_object_or_404(Product, id=item['product_id'])
-        item_total = product.price * item['quantity']
-        total_sum += item_total
-        products_in_cart.append({
-            'product': product,
-            'quantity': item['quantity'],
-            'item_total': item_total
-        })
+    if item.quantity > 1:
+        item.quantity -= 1
+        item.save()
+    else:
+        item.delete()
 
-    return render(request, 'store/cart.html', {
-        'cart_items': products_in_cart,
-        'total_sum': total_sum,
-    })
+    return redirect('home')
+
+
+
 
 
 
@@ -277,20 +284,34 @@ class CartAPI(APIView):
 
 @login_required
 def add_to_cart(request, product_id):
-    cart = request.session.get('cart', [])
+    product = get_object_or_404(Product, id=product_id)
+    cart, _ = Cart.objects.get_or_create(user=request.user)
 
-    found = False
-    for item in cart:
-        if item['product_id'] == product_id:
-            item['quantity'] += 1
-            found = True
-            break
+    quantity = request.POST.get('quantity', 1)
+    try:
+        quantity = int(quantity)
+    except ValueError:
+        quantity = 1
 
-    if not found:
-        cart.append({'product_id': product_id, 'quantity': 1})
+    if quantity < 1:
+        quantity = 1
+    elif quantity > 10:
+        quantity = 10
 
-    request.session['cart'] = cart
-    return redirect('cart') 
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        product=product,
+        defaults={'quantity': quantity}
+    )
+
+    if not created:
+        cart_item.quantity += quantity
+        cart_item.save()
+
+    return redirect('home')
+
+
+
 
 
 @login_required

@@ -3,6 +3,50 @@
 {% block title %}Главная - Магазин{% endblock %}
 
 {% block content %}
-    <h1>Добро пожаловать в наш магазин!</h1>
-    <p>Выберите категорию товаров и начните покупки.</p>
+  <h1 style="text-align:center;">Добро пожаловать в наш магазин!</h1>
+
+  <h2 style="margin-top:30px;">🆕 Новые товары</h2>
+  <div class="product-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+    {% for product in products %}
+      <div class="product-card" style="border: 1px solid #ccc; border-radius: 10px; padding: 10px; text-align:center; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);">
+        <h3 style="margin: 5px 0;">{{ product.name }}</h3>
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-height:100px; width:auto; margin-bottom:10px;">
+        <p style="font-weight:bold;">{{ product.price }} тг</p>
+        <form action="{% url 'add_to_cart' product.id %}" method="post" style="display:flex; justify-content:center; align-items:center; gap:5px;">
+          {% csrf_token %}
+          <input type="number" name="quantity" value="1" min="1" max="10" style="width:50px;">
+          <button type="submit">➕</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+
+  <hr style="margin: 40px 0;">
+
+  <h2>🛒 Ваша корзина</h2>
+  {% if cart_items %}
+    <ul style="list-style: none; padding: 0;">
+      {% for item in cart_items %}
+        <li style="margin-bottom:10px;">
+          <strong>{{ item.product.name }}</strong> — {{ item.quantity }} × {{ item.product.price }} тг
+          <form action="{% url 'increase_quantity' item.product.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">➕</button>
+          </form>
+          <form action="{% url 'decrease_quantity' item.product.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">➖</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+    <p><strong>Итого: {{ cart_total }} тг</strong></p>
+    <form action="{% url 'fake_payment' %}" method="post">
+      {% csrf_token %}
+      <button type="submit" style="padding: 8px 16px; font-weight: bold; background: green; color: white; border: none; border-radius: 5px;">Оформить заказ</button>
+    </form>
+  {% else %}
+    <p>Корзина пуста.</p>
+  {% endif %}
 {% endblock %}
+

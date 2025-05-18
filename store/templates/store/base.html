@@ -16,7 +16,6 @@
         <div class="links">
             <a href="{% url 'home' %}">Главная</a>
             <a href="{% url 'product_list' %}">Товары</a>
-            <a href="{% url 'cart' %}">Корзина</a>
             <a href="{% url 'orders' %}">История</a>
             {% if user.is_authenticated %}
                 <form action="{% url 'logout' %}" method="post">
